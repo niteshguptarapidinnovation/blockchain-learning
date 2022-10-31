@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.17;
 
 contract ToDoApp {
 
@@ -27,6 +27,10 @@ contract ToDoApp {
     function createTodo(string calldata _text, Priority _priority, Status _status) external returns(uint) {
         todos.push(ToDo({owner: msg.sender, text: _text, priority: _priority, status: _status}));
         return (todos.length - 1);
+    }
+
+    function getTodos() external view returns (ToDo[] memory) {
+        return todos;
     }
 
     function updateTodo(uint _id, string calldata _text) external  {
