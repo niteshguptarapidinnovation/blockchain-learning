@@ -22,7 +22,7 @@ describe("Token Contract", async () => {
 
     describe("Transactions", async() => {
         it("Should transfer tokens between accounts", async () => {
-            // Transfer from owner account to address1account
+            // Transfer from owner account to address1
             const amount1 = 10;
             await hardhaToken.transfer(addr1.address, amount1);
             expect(await hardhaToken.balanceOf(addr1.address)).to.equal(amount1);

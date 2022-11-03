@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 /*
 Blockchain interview question
@@ -23,7 +24,7 @@ c) contract will accept the above token and mint TITO tokens in the
  */
 
 contract TITOToken is ERC20 {
-    IERC20 private OITT;
+    IERC20 public OITT;
 
     constructor(string memory _name, string memory _symbol, address _OITTContract) ERC20(_name, _symbol) {
         OITT = IERC20(_OITTContract);
