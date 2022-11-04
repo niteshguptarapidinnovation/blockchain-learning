@@ -4,13 +4,14 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "hardhat/console.sol";
 
 
 contract NITToken is IERC20, IERC20Metadata, Ownable {
     
     uint public totalSupply;
     mapping(address => uint) private balances;
-    mapping(address => mapping(address => uint)) public allowance;
+    mapping(address => mapping(address => uint)) private allowances;
     string public name;
     string public symbol;
     uint8 public decimals;
@@ -25,7 +26,7 @@ contract NITToken is IERC20, IERC20Metadata, Ownable {
     function transferOwnership(address newOwner) override public {
         require(_msgSender() == owner(), "Not the Owner");
         require(newOwner != address(0), "Not valid address");
-        require(newOwner == owner(), "Already owner");
+        require(newOwner != owner(), "Already owner");
         _transferOwnership(newOwner);
     }
 
@@ -55,7 +56,7 @@ contract NITToken is IERC20, IERC20Metadata, Ownable {
     }
 
     function increaseAllowance(address _spender, uint _amount) external returns (bool) {
-        uint allowanceBalance = allowance[_msgSender()][_spender];
+        uint allowanceBalance = allowances[_msgSender()][_spender];
         _approve(_msgSender(), _spender, allowanceBalance + _amount);
         return true;
     }
@@ -77,17 +78,35 @@ contract NITToken is IERC20, IERC20Metadata, Ownable {
         return true;
     }
 
+    function balanceOf(address _account) public view override returns (uint) {
+        if(blacklisted[_account] == true) {
+            return 0;
+        } 
+        return balances[_account];
+    }
+
+    function allowance(address _owner, address _spender) external view override returns (uint) {
+        if(blacklisted[_spender] == true) {
+            return 0;
+        } 
+        return allowances[_owner][_spender];
+    }
+
+    function isBlacklisted(address _account) external view onlyOwner() returns (bool) {
+        return blacklisted[_account];
+    }
+
     function _transfer(address _from, address _to, uint _amount) internal {
         require(_from != address(0), "Invalid from adress");
         require(_to != address(0), "Invalid to adress");
         require(balances[_from] >= _amount, "insufficient balance");
-        balances[_msgSender()] -= _amount;
+        balances[_from] -= _amount;
         balances[_to] += _amount;
         emit Transfer(_from, _to, _amount);
     }
 
     function _mint(address _to, uint _amount) internal {
-        require(_to != address(0), "Token minted");
+        require(_to != address(0), "cannot minted to address 0");
         require(_amount > 0, "Invalid amount");
         totalSupply += _amount;
         balances[_to] += _amount;
@@ -95,6 +114,7 @@ contract NITToken is IERC20, IERC20Metadata, Ownable {
     }
 
     function _burn(address _account, uint _amount) internal {
+        require(_account != address(0), "Invalid account");
         require(balances[_account] >= _amount, "insufficient balance");
         require(_amount > 0, "Invalid amount");
         totalSupply -= _amount;
@@ -106,21 +126,13 @@ contract NITToken is IERC20, IERC20Metadata, Ownable {
         require(_amount > 0, "Invalid amount");
         require(_spender != address(0), "Invalid spender");
         require(_account != address(0), "Invalid account");
-        allowance[_account][_spender] = _amount;
+        allowances[_account][_spender] = _amount;
         emit Approval(msg.sender, _spender, _amount);
     }
 
     function _spendAllowance(address _from, address _spender, uint _amount) internal {
-        uint allowanceBalance = allowance[_from][_spender];
+        uint allowanceBalance = allowances[_from][_spender];
         require(allowanceBalance >= _amount, "Invalid allowance");
         _approve(_from, _spender, allowanceBalance - _amount);
     }
-
-    function balanceOf(address _account) public view override returns (uint) {
-        if(blacklisted[_account] == true) {
-            return 0;
-        } 
-        return balances[_account];
-    }
-
 }
